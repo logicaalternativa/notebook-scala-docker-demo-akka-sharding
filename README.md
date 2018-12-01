@@ -56,16 +56,16 @@ self-explanatory.
 You will run the notebook `Apendice. Api rest akka management.ipynb` if
 you want to check the state cluster thanks to Akka Management.
 
-Enjoy!.
+Enjoy!
 
 
 ---
 
-# Spanish
+# Español
 
 ## Demo akka sharding usando notebook jupiter
 
-Repo con los "cuadernos_" de jupyter usados en la 
+Repo con los "_cuadernos_" de jupyter usados en la 
 [demo de akka sharding](http://www.logicaalternativa.com/slides/akka-sharding) 
 presentada en el **Commit Conf** en noviembre del **2018**.
 
