@@ -13,6 +13,8 @@ Repo Notebook de jupyter repo that was used in
 [demo de akka sharding](http://www.logicaalternativa.com/slides/akka-sharding) 
 This talk was given in **Commit Conf** in November **2018**.
 
+![Commit Conf](https://raw.githubusercontent.com/logicaalternativa/logicaalternativa.github.io/master/wp-content/uploads/2018/11/android-chrome-300x300-150x150.png)
+
 ### Requirement
 
 It is needed Docker
@@ -68,6 +70,8 @@ Enjoy!
 Repo con los "_cuadernos_" de jupyter usados en la 
 [demo de akka sharding](http://www.logicaalternativa.com/slides/akka-sharding) 
 presentada en el **Commit Conf** en noviembre del **2018**.
+
+![Commit Conf](https://raw.githubusercontent.com/logicaalternativa/logicaalternativa.github.io/master/wp-content/uploads/2018/11/android-chrome-300x300-150x150.png)
 
 ### Requistos
 
