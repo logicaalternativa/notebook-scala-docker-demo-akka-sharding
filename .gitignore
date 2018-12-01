@@ -1,3 +1,4 @@
-others/.ipynb_checkpoints
+./js/dat/**
+ipynb_checkpoints
 .ipynb_checkpoints
-./js/data/*
+others/.ipynb_checkpoints
