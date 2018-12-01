@@ -1,0 +1,400 @@
+<!-- START SIGMA IMPORTS -->
+<script src="../lib/jquery-3.3.1.min.js"></script>
+<script src="../src/sigma.core.js"></script>
+<script src="../src/conrad.js"></script>
+<script src="../src/utils/sigma.utils.js"></script>
+<script src="../src/utils/sigma.polyfills.js"></script>
+<script src="../src/sigma.settings.js"></script>
+<script src="../src/classes/sigma.classes.dispatcher.js"></script>
+<script src="../src/classes/sigma.classes.configurable.js"></script>
+<script src="../src/classes/sigma.classes.graph.js"></script>
+<script src="../src/classes/sigma.classes.camera.js"></script>
+<script src="../src/classes/sigma.classes.quad.js"></script>
+<script src="../src/classes/sigma.classes.edgequad.js"></script>
+<script src="../src/captors/sigma.captors.mouse.js"></script>
+<script src="../src/captors/sigma.captors.touch.js"></script>
+<script src="../src/renderers/sigma.renderers.canvas.js"></script>
+<script src="../src/renderers/sigma.renderers.webgl.js"></script>
+<script src="../src/renderers/sigma.renderers.svg.js"></script>
+<script src="../src/renderers/sigma.renderers.def.js"></script>
+<script src="../src/renderers/webgl/sigma.webgl.nodes.def.js"></script>
+<script src="../src/renderers/webgl/sigma.webgl.nodes.fast.js"></script>
+<script src="../src/renderers/webgl/sigma.webgl.edges.def.js"></script>
+<script src="../src/renderers/webgl/sigma.webgl.edges.fast.js"></script>
+<script src="../src/renderers/webgl/sigma.webgl.edges.arrow.js"></script>
+<script src="../src/renderers/canvas/sigma.canvas.labels.def.js"></script>
+<script src="../src/renderers/canvas/sigma.canvas.hovers.def.js"></script>
+<script src="../src/renderers/canvas/sigma.canvas.nodes.def.js"></script>
+<script src="../src/renderers/canvas/sigma.canvas.edges.def.js"></script>
+<script src="../src/renderers/canvas/sigma.canvas.edges.curve.js"></script>
+<script src="../src/renderers/canvas/sigma.canvas.edges.arrow.js"></script>
+<script src="../src/renderers/canvas/sigma.canvas.edges.curvedArrow.js"></script>
+<script src="../src/renderers/canvas/sigma.canvas.edgehovers.def.js"></script>
+<script src="../src/renderers/canvas/sigma.canvas.edgehovers.curve.js"></script>
+<script src="../src/renderers/canvas/sigma.canvas.edgehovers.arrow.js"></script>
+<script src="../src/renderers/canvas/sigma.canvas.edgehovers.curvedArrow.js"></script>
+<script src="../src/renderers/canvas/sigma.canvas.extremities.def.js"></script>
+<script src="../src/renderers/svg/sigma.svg.utils.js"></script>
+<script src="../src/renderers/svg/sigma.svg.nodes.def.js"></script>
+<script src="../src/renderers/svg/sigma.svg.edges.def.js"></script>
+<script src="../src/renderers/svg/sigma.svg.edges.curve.js"></script>
+<script src="../src/renderers/svg/sigma.svg.labels.def.js"></script>
+<script src="../src/renderers/svg/sigma.svg.hovers.def.js"></script>
+<script src="../src/middlewares/sigma.middlewares.rescale.js"></script>
+<script src="../src/middlewares/sigma.middlewares.copy.js"></script>
+<script src="../src/misc/sigma.misc.animation.js"></script>
+<script src="../src/misc/sigma.misc.bindEvents.js"></script>
+<script src="../src/misc/sigma.misc.bindDOMEvents.js"></script>
+<script src="../src/misc/sigma.misc.drawHovers.js"></script>
+<!-- END SIGMA IMPORTS -->
+<script src="../plugins/sigma.renderers.edgeLabels/settings.js"></script>
+<script src="../plugins/sigma.renderers.edgeLabels/sigma.canvas.edges.labels.def.js"></script>
+<script src="../plugins/sigma.renderers.edgeLabels/sigma.canvas.edges.labels.curve.js"></script>
+<script src="../plugins/sigma.renderers.edgeLabels/sigma.canvas.edges.labels.curvedArrow.js"></script>
+<div id="container">
+  <style>
+    #graph-container {
+      top: 0;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      position: absolute;
+    }
+  </style>
+  <div id="graph-container"></div>
+</div>
+<script>
+/**
+ * This is a basic example on how to instantiate sigma. A random graph is
+ * generated and stored in the "graph" variable, and then sigma is instantiated
+ * directly with the graph.
+ *
+ * The simple instance of sigma is enough to make it render the graph on the on
+ * the screen, since the graph is given directly to the constructor.
+ */
+
+var i,
+    s,
+    N = 100,
+    E = 500,
+    g = {
+      nodes: [],
+      edges: []
+    };
+        
+var standarSize = 100
+
+var s = new sigma({
+            graph: g,
+            //~ container: 'graph-container'
+            renderer: {
+                container: document.getElementById('graph-container'),
+                type: 'canvas'
+              }
+        });
+
+function drawSharing( parentId, shardJson, from ) {
+    
+    var parentIdNode = existsNode( parentId );
+    
+    var x = parentIdNode.x;
+    var y = parentIdNode.y;
+    
+    s.graph.nodes().filter( function(reg ) {
+        return reg.parent_id == parentId
+    } ).forEach( function (reg) {
+        s.graph.dropNode(reg.id );
+    } );
+    
+    shardJson.regions.forEach( function( region ) {
+                     
+        for (var i =0; i < region.numEntities; i++ ) {
+            
+            degrees = (2 * Math.PI /(region.numEntities +1 ) )
+            console.log( "degrees:" + degrees );
+            shardX = x + (0.125 * Math.cos( degrees * (i + 1 ) ) );
+            shardY = y + (0.125 * Math.sin( degrees * (i + 1 ) ) );
+            
+            idnodeSharing =  parentId+ "_shardId_" + region.shardId + "_" + i;
+            s.graph.addNode({
+                id: idnodeSharing,
+                label: "sharding region:" + region.shardId + ", Entity: " + i ,
+                x: shardX,
+                y: shardY,
+                size: standarSize / 1.5,
+                color: '#6f6',
+                type : 'shard_entity',
+                parent_id : parentId,
+                from : from
+            });
+        
+            s.graph.addEdge({
+                id: 'e_r_' + idnodeSharing,
+                source: parentId,
+                target: idnodeSharing,
+                size: standarSize,
+                color: '#ccc',
+                type: 'arrow'
+              });
+             
+         }
+     
+    });
+} 
+
+function exists( id , list ) {
+    
+    var res = null;
+    var index = 0;
+    
+    while( res == null && index < list.length ) {
+        var reg = list[index];
+        console.log( "reg : " + reg.id );
+        if (reg.id == id ) {
+            res = reg;
+        }        
+        index ++;
+    }
+    
+    return res;
+    
+    
+}
+
+function existsNode( nameNode ) {
+    return exists( nameNode, s.graph.nodes() );
+}
+
+function existsEdge( id  ) {
+    return exists( id, s.graph.edges() );
+}
+
+function nodesCluter(){
+    return s.graph.nodes().filter(function (reg) {
+        return reg.type ==  'node_cluster';    
+    });
+}
+
+function redrawClusterNodes( membersJson ) {
+    
+    nodes = nodesCluter();
+    
+    var nodeDegrees = 2 * Math.PI /( nodes.length )
+
+    console.log( "nodeDegrees:" + nodeDegrees );
+    
+    nodes.forEach( function( reg , index ) {
+       xi = 0.38 * Math.cos( nodeDegrees * (index ) );
+       yi = 0.38 * Math.sin( nodeDegrees * (index ) );
+       reg.x= xi
+       reg.y= yi
+       if ( reg.id  == membersJson.leader ) {
+            console.log( "membersJson.leader : " + membersJson.leader );
+            reg.color ="#800080"
+       } else {
+           reg.color ="#FFA500"
+       }
+       
+    });
+    
+}
+
+function dataGetting( membersJson, shardJson, from ) {
+    
+    var parentId = membersJson.selfNode
+    
+    if ( ! existsNode( parentId ) ) {        
+        s.graph.addNode({
+            id: parentId,
+            label: 'Node ' + parentId,
+            x: 0,
+            y: 0,
+            size: standarSize,
+            color: '#FFA500',
+            type : 'node_cluster'
+         });
+    }   
+     
+    addNodes( parentId, membersJson, from );
+    dropNodesNotUsed( membersJson );
+    redrawClusterNodes( membersJson );
+    drawSharing( parentId, shardJson,from );
+    s.refresh();
+}
+
+function addNodes( parentId, membersJson, from ) {
+    
+    membersJson.members.forEach ( function( member) {
+        
+        if ( member.node != parentId ) {
+       
+            var idnode = member.node
+            var idEdge = parentId + "_"+ idnode
+            
+             if ( ! existsNode( idnode ) ) {    
+                 s.graph.addNode({
+                    id: idnode,
+                    label: 'Node ' + idnode,
+                    x: 0,
+                    y: 0,
+                    size: standarSize,
+                    color: '#f00',
+                    type : 'node_cluster'
+                 });
+             }
+             
+             if ( ! existsEdge( idEdge ) ) {
+                 s.graph.addEdge({
+                    id: idEdge,
+                    source: parentId,
+                    target: idnode,
+                    size: standarSize,
+                    color: '#666',
+                    type: 'curvedArrow',
+                    from : from
+                  }); 
+             }
+            
+            var edge = existsEdge( idEdge ); 
+             
+            var isUnreachable =membersJson.unreachable.filter( function( reg ) {
+                return reg.node == idnode
+            }).length;
+            
+            console.log( "isUnreachable  " + isUnreachable )
+            
+            if ( isUnreachable == 0  ){
+                edge.color = '#666';
+            } else if ( edge.color == '#bbb'  ){
+                edge.color = '#fff';
+            } else {
+                edge.color = '#bbb';
+            }
+             
+         } 
+        
+    });
+    
+}
+
+function dropNodesNotUsed( membersJson ){
+
+  nodesCluster = nodesCluter();
+      
+  toDelete = nodesCluster.filter( function( res ) {
+      
+      var notFound = true;
+      
+      for ( var i = 0; i < membersJson.members.length; i++ ) {
+            if ( res.id == membersJson.members[i].node ) {
+              notFound = false;
+              break;
+            }
+      }
+   
+      return notFound;
+      
+  });
+  
+  toDelete.forEach( function( reg ){
+     s.graph.dropNode( reg.id );
+  });
+    
+}
+
+
+function exec() {
+    
+    function clean( from,dfd ) {
+        
+      return function() {
+          
+            dfd.resolve( 0 );
+        
+            s.graph.nodes().filter( function( reg ) {
+                return reg.from == from;   
+            }).forEach(function( reg ){
+                return s.graph.dropNode( reg.id );
+            });
+            
+            s.graph.edges().filter( function( reg ) {
+                return reg.from == from;   
+            }).forEach(function( reg ){
+                return s.graph.dropEdge( reg.id );
+                
+            });
+        }
+        
+        
+    }
+    
+    function getDataFrom ( from ) {
+        
+        var dfd = $.Deferred();
+    
+        $.getJSON("data/members_"+ from +".json", function( membersJson ) {
+            console.log( membersJson ); 
+            console.log( membersJson.members )
+            $.getJSON( "data/shard_" + from + ".json",function( shardJson ) {
+                dfd.resolve( 1 );
+                console.log( shardJson );
+                dataGetting( membersJson, shardJson, from );
+            }).fail( clean( from, dfd ) );
+            
+        }).fail( clean( from, dfd ) );
+        
+        return dfd.promise();
+    }
+    
+    var res0 = getDataFrom( "8554" );
+    var res1 = getDataFrom( "8553" );
+    
+    $.when( res0, res1 ).then( function( a, b ){
+        console.log( "ZZZZZZZZZZZZZZZZZZZZZZ a " + a + ", b " + b );
+        if ( a + b == 0 ) {
+            s.graph.nodes().forEach( function( reg ){
+                s.graph.dropNode( reg.id )
+            });
+            s.refresh();
+        }
+    } );
+    
+    
+    
+    window.setTimeout(exec, 1500);
+}
+
+window.setTimeout(exec, 500);
+
+$(document).ready(function() {
+  $.ajaxSetup({ cache: false });
+});
+
+
+
+// Generate a random graph:
+//~ for (i = 0; i < N; i++)
+  //~ g.nodes.push({
+    //~ id: 'n' + i,
+    //~ label: 'Node ' + i,
+    //~ x: Math.random(),
+    //~ y: Math.random(),
+    //~ size: Math.random(),
+    //~ color: '#666'
+  //~ });
+
+//~ for (i = 0; i < E; i++)
+  //~ g.edges.push({
+    //~ id: 'e' + i,
+    //~ source: 'n' + (Math.random() * N | 0),
+    //~ target: 'n' + (Math.random() * N | 0),
+    //~ size: Math.random(),
+    //~ color: '#ccc'
+  //~ });
+
+// Instantiate sigma:
+//~ s = new sigma({
+  //~ graph: g,
+  //~ container: 'graph-container'
+//~ });
+</script>
